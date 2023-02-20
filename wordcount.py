@@ -1,11 +1,19 @@
-import sys
 
-from pyspark import SparkContext, SparkConf
+from pyspark import SparkContext
 
-conf = SparkConf()
-sc = SparkContext(conf=conf)
+# create a new SparkContext
+sc = SparkContext("local", "Word Count App")
 
-words = sc.textFile(sys.argv[1]).flatMap(lambda line: line.split(" "))
-wordCounts = words.map(lambda word: (word, 1)).reduceByKey(lambda a, b: a + b)
-wordCounts.coalesce(1, shuffle=True).saveAsTextFile(sys.argv[2])
+# read the input file
+input_file = sc.textFile(sys.argv[1])
+
+# split each line into words and create a list of (word, 1) pairs
+word_counts = input_file.flatMap(lambda line: line.split()) \
+                        .map(lambda word: (word, 1)) \
+                        .reduceByKey(lambda x, y: x + y)
+
+# save the word counts to a text file
+word_counts.saveAsTextFile(sys.argv[2])
+
+# stop the SparkContext
 sc.stop()
